@@ -13,6 +13,8 @@ require (
 )
 
 replace (
+	github.com/containous/traefik/v2 v2.2.1 => github.com/traefik/traefik/v2 v2.2.1
+
 	github.com/Azure/go-autorest => github.com/Azure/go-autorest v12.4.1+incompatible
 	github.com/abbot/go-http-auth => github.com/containous/go-http-auth v0.4.1-0.20180112153951-65b0cdae8d7f
 	github.com/docker/docker => github.com/docker/engine v1.4.2-0.20191113042239-ea84732a7725
