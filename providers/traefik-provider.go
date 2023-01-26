@@ -3,6 +3,7 @@ package providers
 import (
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"net/http"
 	"os"
 	"strings"
@@ -34,7 +35,8 @@ type TraefikConfig struct {
 	Pass    string   `json:"pass"`
 }
 type TraefikRouter struct {
-	Name    string `json:"service"`
+	//Name    string `json:"service"`
+	Name    string `json:"name"`
 	RuleStr string `json:"rule"`
 	Status  string `json:"status"`
 	Enabled bool
@@ -96,6 +98,15 @@ func (tr *Traefik) GetApps() map[string]*App {
 	for _, router := range routers {
 		app := newApp()
 		name := router.Name
+
+		// traefik + dockercompose sets router name to "[containername]-[stackname]""
+		// we need ONLY the container name to read labels from it via docker, so we remove "-[stackname]"
+		// TODO: this will fail for containers that are NOT postfixed with "-[stackname]", but contain a "-" in its name anyway.
+		//       no idea if that's common or possible in traefik + dockercompose
+		//nameRegex := regexp.MustCompile(`-\w*$`) //the last occurence of "dash follwed by characters/numbers"
+		nameRegex := regexp.MustCompile(`@docker$`) //the last occurence of "dash follwed by characters/numbers"
+		name = nameRegex.ReplaceAllString(name, "") //remove stackname, keep containername. works with container with dash in it, as long as the last postfix is the stackname we don't need
+
 		for _, igname := range tr.Ignore {
 			if strings.ToLower(name) == strings.ToLower(igname) {
 				app.Enabled = false
@@ -113,6 +124,7 @@ func (tr *Traefik) GetApps() map[string]*App {
 			}
 		}
 		for _, dkr := range tr.Dockers {
+			log.Debugf("traefik-provider.GetApps: Trying to upgrade container info for container '%s'", name)
 			newName, upName := dkr.UpgradeApp(name, app)
 			if upName {
 				name = newName

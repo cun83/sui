@@ -242,6 +242,7 @@ func (dkr *Docker) swarmGetApps() map[string]*App {
 }
 
 func (dkr *Docker) dockerUpgradeApp(matchName string, app *App) (string, bool) {
+	log.Debugf("docker-provider.dockerUpgradeApp: was asked to upgrade container info for container '%s'", matchName)
 	containers, err := dkr.getContainerList()
 	if err != nil {
 		return "", false
@@ -268,10 +269,12 @@ func (dkr *Docker) dockerUpgradeApp(matchName string, app *App) (string, bool) {
 			}
 			lName, namex := info.Labels[dockerNameLabel]
 			if namex {
+				log.Debugf("docker-provider.dockerUpgradeApp: found upgraded name for '%s': '%s'", matchName, lName)
 				return lName, true
 			}
 		}
 	}
+	log.Debugf("docker-provider.dockerUpgradeApp: did NOT find upgraded name for '%s'", matchName)
 	return "", false
 }
 
